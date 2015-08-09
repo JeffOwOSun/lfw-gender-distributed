@@ -45,6 +45,9 @@ def genderize(firstnames, user, password, servers):
 			else:
 				# quota has been run out. break out and increment server
 				break
+		if len(firstnames) <= 0:
+			break
+	return gender
 
 def main(user, password, servers, root_dir, male_dir, female_dir):
 	try:
