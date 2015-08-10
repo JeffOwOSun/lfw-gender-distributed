@@ -34,7 +34,10 @@ def genderize(firstnames, user, password, servers):
 			param = '&'.join(['name[]=%s' % x for x in names_batch])
 			ssh_cmd = 'curl -gv https://api.genderize.io?%s 2> >(grep X-Rate-Limit-Remaining 1>&2)'
 			stdout, stderr = remote_ssh_cmd(user, password, server, ssh_cmd)
-			result = json.loads(stdout)
+			try:
+				result = json.loads(stdout)
+			except:
+				raise Exception('remote execution error: %s' % stderr)
 			if type(result) is not list:
 				result = [result, ]
 			result = [x for x in result if 'name' in x] # remove invalid result
@@ -75,7 +78,7 @@ def move_images(root_dir, male_dir, female_dir, undetermined_dir, gender):
 		for source_file in filenames:
 			shutil.copyfile(os.path.join(dirpath, source_file), os.path.join(target_dir, source_file))
 
-def main(user, password, servers, root_dir, male_dir, female_dir):
+def main(user, password, servers, root_dir, male_dir, female_dir, undetermined_dir):
 	print 'loading firstnames...\n'
 	try:
 		f = open('firstnames.json', 'r')
@@ -101,4 +104,4 @@ def main(user, password, servers, root_dir, male_dir, female_dir):
 		
 
 if __name__ == '__main__':
-	main(user, password, servers, root_dir, male_dir, female_dir)
+	main(user, password, servers, root_dir, male_dir, female_dir, undetermined_dir)
