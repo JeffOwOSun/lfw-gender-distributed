@@ -7,6 +7,7 @@ from settings import user, password, servers, root_dir, male_dir, female_dir, un
 
 def remote_ssh_cmd(user, password, server, command):
     ssh_cmd = 'sshpass -p %s ssh -o StrictHostKeyChecking=no %s@%s %s' % (password, user, server, command)
+	print ssh_cmd
     ssh = subprocess.Popen(ssh_cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stdout = ssh.stdout.readlines()
     stderr = ssh.stderr.readlines()
