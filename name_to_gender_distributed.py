@@ -69,6 +69,8 @@ def move_images(root_dir, male_dir, female_dir, undetermined_dir, gender):
 					target_dir = male_dir
 				elif result['gender'] == 'female':
 					target_dir = female_dir
+		except:
+			pass
 		# copy the files
 		for source_file in filenames:
 			shutil.copyfile(os.path.join(dirpath, source_file), os.path.join(target_dir, source_file))
