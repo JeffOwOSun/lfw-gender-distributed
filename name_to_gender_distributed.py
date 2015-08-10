@@ -33,7 +33,7 @@ def genderize(firstnames, user, password, servers):
 			names_batch = firstnames[0: min(quota, max_num_names, len(firstnames))]
 			param = '&'.join(['name[]=%s' % x for x in names_batch])
 			ssh_cmd = 'curl -gv https://api.genderize.io?%s 2> >(grep X-Rate-Limit-Remaining 1>&2)'
-			stdout, stderr = remote_ssh_cmd(user, password, server, command)
+			stdout, stderr = remote_ssh_cmd(user, password, server, ssh_cmd)
 			result = json.loads(stdout)
 			if type(result) is not list:
 				result = [result, ]
