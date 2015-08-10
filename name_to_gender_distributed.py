@@ -2,7 +2,8 @@ import sys
 import os
 import subprocess
 import json
-from settings import user, password, servers, root_dir, male_dir, female_dir
+import shutil
+from settings import user, password, servers, root_dir, male_dir, female_dir, undetermined_dir
 
 def remote_ssh_cmd(user, password, server, command):
     ssh_cmd = 'sshpass -p %s ssh -o StrictHostKeyChecking=no %s@%s %s' % (password, user, server, command)
@@ -26,6 +27,7 @@ def genderize(firstnames, user, password, servers):
 	max_num_names = 10 # number of maximum names in one query
 	gender = []
 	for server in servers:
+		print 'using server: %s\n' % server
 		quota = 1 # probe the real quota
 		while len(firstnames) > 1:
 			names_batch = firstnames[0: min(quota, max_num_names, len(firstnames))]
@@ -36,10 +38,12 @@ def genderize(firstnames, user, password, servers):
 			if type(result) is not list:
 				result = [result, ]
 			result = [x for x in result if 'name' in x] # remove invalid result
-			if len(result) != 0: # if there are valid result
+			if len(result) > 0: # if there are valid result
 				gender.extends(result)
+				print 'fetched %d results! ' % len(result)
 				# update firstnames
 				firstnames = [x for x in firstnames if x not in [y['name'] for y in result]]
+				print '%d firstnames to go...\n' % len(firstnames)
 				# update quota
 				quota = int(stderr.split(': ')[-1])
 			else:
@@ -49,7 +53,28 @@ def genderize(firstnames, user, password, servers):
 			break
 	return gender
 
+def move_images(root_dir, male_dir, female_dir, undetermined_dir, gender):
+	for dirpath, dirnames, filenames in os.walk(root_dir):
+		# get the firstname for this dir
+		firstname = os.path.basename(dirpath).split('_')[0]
+		# look firstname up in gender
+		query_result = [x for x in gender if x['name'] == firstname]
+		# default to undetermined_dir
+		target_dir = undetermined_dir
+		# try to determine gender
+		try:
+			result = query_result[0]
+			if float(result['probability']) > 0.9 and int(result['count']) >= 100:
+				if result['gender'] == 'male':
+					target_dir = male_dir
+				elif result['gender'] == 'female':
+					target_dir = female_dir
+		# copy the files
+		for source_file in filenames:
+			shutil.copyfile(os.path.join(dirpath, source_file), os.path.join(target_dir, source_file))
+
 def main(user, password, servers, root_dir, male_dir, female_dir):
+	print 'loading firstnames...\n'
 	try:
 		f = open('firstnames.json', r)
 		firstnames = json.loads(f.read())
@@ -58,6 +83,7 @@ def main(user, password, servers, root_dir, male_dir, female_dir):
 		f = open('firstnames.json', w)
 		f.write(json.dump(firstnames))
 	
+	print 'fetching gender...\n'
 	try:
 		f = open('gender.json', r)
 		gender = json.loads(f.read())
@@ -68,6 +94,8 @@ def main(user, password, servers, root_dir, male_dir, female_dir):
 	finally:
 		f = open('gender.json', w)
 		f.write(json.dump(gender))
+		
+	move_images(root_dir, male_dir, female_dir, undetermined_dir, gender)
 		
 
 if __name__ == '__main__':
