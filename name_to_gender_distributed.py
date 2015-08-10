@@ -37,11 +37,9 @@ def genderize(firstnames, user, password, servers):
 			ssh_cmd = r"curl -gv \'https://api.genderize.io?%s\'" % param
 			stdout, stderr = remote_ssh_cmd(user, password, server, ssh_cmd)
 			try:
-				result = json.loads(stdout)
+				result = [json.loads(line) for line in stdout]
 			except:
 				raise Exception('remote execution error: %s' % stderr)
-			if type(result) is not list:
-				result = [result, ]
 			result = [x for x in result if 'name' in x] # remove invalid result
 			if len(result) > 0: # if there are valid result
 				gender.extends(result)
