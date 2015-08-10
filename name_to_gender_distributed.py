@@ -83,7 +83,7 @@ def main(user, password, servers, root_dir, male_dir, female_dir):
 	except:
 		firstnames = get_firstnames(root_dir)
 		f = open('firstnames.json', 'w')
-		f.write(json.dump(firstnames))
+		f.write(json.dumps(firstnames))
 	
 	print 'fetching gender...\n'
 	try:
@@ -95,7 +95,7 @@ def main(user, password, servers, root_dir, male_dir, female_dir):
 		gender = genderize(firstnames, user, password, servers)
 	finally:
 		f = open('gender.json', 'w')
-		f.write(json.dump(gender))
+		f.write(json.dumps(gender))
 		
 	move_images(root_dir, male_dir, female_dir, undetermined_dir, gender)
 		
