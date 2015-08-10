@@ -3,11 +3,12 @@ import os
 import subprocess
 import json
 import shutil
+import re
 from settings import user, password, servers, root_dir, male_dir, female_dir, undetermined_dir
 
 def remote_ssh_cmd(user, password, server, command):
     ssh_cmd = 'sshpass -p %s ssh -o StrictHostKeyChecking=no %s@%s %s' % (password, user, server, command)
-	print ssh_cmd
+    print ssh_cmd
     ssh = subprocess.Popen(ssh_cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stdout = ssh.stdout.readlines()
     stderr = ssh.stderr.readlines()
@@ -33,7 +34,7 @@ def genderize(firstnames, user, password, servers):
 		while len(firstnames) > 1:
 			names_batch = firstnames[0: min(quota, max_num_names, len(firstnames))]
 			param = '&'.join(['name[]=%s' % x for x in names_batch])
-			ssh_cmd = "curl -gv \\'https://api.genderize.io?%s\\' 2> >(grep X-Rate-Limit-Remaining 1>&2)"
+			ssh_cmd = r"curl -gv \'https://api.genderize.io?%s\'" % param
 			stdout, stderr = remote_ssh_cmd(user, password, server, ssh_cmd)
 			try:
 				result = json.loads(stdout)
@@ -48,8 +49,12 @@ def genderize(firstnames, user, password, servers):
 				# update firstnames
 				firstnames = [x for x in firstnames if x not in [y['name'] for y in result]]
 				print '%d firstnames to go...\n' % len(firstnames)
-				# update quota
-				quota = int(stderr.split(': ')[-1])
+                                # update quota
+                                pattern = r".*X-Rate-Limit-Remaining:\s(\d*).*"
+                                r = re.compile(pattern)
+                                quota_str = filter(r.match, stderr)[0]
+                                m = r.search(quota_str)
+                                quota = int(m.group(1))
 			else:
 				# quota has been run out. break out and increment server
 				break
@@ -88,7 +93,7 @@ def main(user, password, servers, root_dir, male_dir, female_dir, undetermined_d
 		firstnames = get_firstnames(root_dir)
 		f = open('firstnames.json', 'w')
 		f.write(json.dumps(firstnames))
-	
+
 	print 'fetching gender...\n'
 	try:
 		f = open('gender.json', 'r')
@@ -97,12 +102,12 @@ def main(user, password, servers, root_dir, male_dir, female_dir, undetermined_d
 		gender.extends(genderize(firstnames, user, password, servers))
 	except:
 		gender = genderize(firstnames, user, password, servers)
-		
+
 	f = open('gender.json', 'w')
 	f.write(json.dumps(gender))
-		
+
 	move_images(root_dir, male_dir, female_dir, undetermined_dir, gender)
-		
+
 
 if __name__ == '__main__':
 	main(user, password, servers, root_dir, male_dir, female_dir, undetermined_dir)

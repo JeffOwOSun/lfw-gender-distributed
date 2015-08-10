@@ -3,3 +3,5 @@ male/
 female/
 lfw-deepfunneled/
 settings.py
+*.json
+*.pyc
