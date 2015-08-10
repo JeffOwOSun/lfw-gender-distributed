@@ -1,7 +1,10 @@
 archive/
 male/
 female/
+undetermined/
 lfw-deepfunneled/
 settings.py
 *.json
 *.pyc
+*.tar.gz
+*.log
