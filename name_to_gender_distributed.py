@@ -78,23 +78,23 @@ def move_images(root_dir, male_dir, female_dir, undetermined_dir, gender):
 def main(user, password, servers, root_dir, male_dir, female_dir):
 	print 'loading firstnames...\n'
 	try:
-		f = open('firstnames.json', r)
+		f = open('firstnames.json', 'r')
 		firstnames = json.loads(f.read())
 	except:
 		firstnames = get_firstnames(root_dir)
-		f = open('firstnames.json', w)
+		f = open('firstnames.json', 'w')
 		f.write(json.dump(firstnames))
 	
 	print 'fetching gender...\n'
 	try:
-		f = open('gender.json', r)
+		f = open('gender.json', 'r')
 		gender = json.loads(f.read())
 		firstnames = [x for x in firstnames if x not in [y['name'] for y in gender]]
 		gender.extends(genderize(firstnames, user, password, servers))
 	except:
 		gender = genderize(firstnames, user, password, servers)
 	finally:
-		f = open('gender.json', w)
+		f = open('gender.json', 'w')
 		f.write(json.dump(gender))
 		
 	move_images(root_dir, male_dir, female_dir, undetermined_dir, gender)
